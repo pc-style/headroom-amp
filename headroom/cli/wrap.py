@@ -3366,8 +3366,8 @@ def amp(
             port=port,
             global_install=global_install,
         )
-    except (FileNotFoundError, NotADirectoryError) as exc:
-        raise click.ClickException(str(exc)) from exc
+    except OSError as exc:
+        raise click.ClickException(f"Amp plugin install failed: {exc}") from exc
 
     def _print_amp_setup() -> None:
         for line in _render_amp_setup_lines(

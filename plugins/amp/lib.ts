@@ -11,13 +11,25 @@ export type HeadroomWorkspaceConfig = {
   "headroom.enabled"?: boolean;
 };
 
+export function isLocalProxyUrl(proxyUrl: string): boolean {
+  try {
+    const parsed = new URL(proxyUrl);
+    return parsed.hostname === "127.0.0.1" || parsed.hostname === "localhost";
+  } catch {
+    return false;
+  }
+}
+
 export function resolveProxyUrl(
   config: HeadroomWorkspaceConfig,
   fallbackPort = DEFAULT_PROXY_PORT,
 ): string {
   const explicit = config["headroom.proxyUrl"];
   if (typeof explicit === "string" && explicit.trim()) {
-    return explicit.trim().replace(/\/$/, "");
+    const normalized = explicit.trim().replace(/\/$/, "");
+    if (isLocalProxyUrl(normalized)) {
+      return normalized;
+    }
   }
 
   const port = config["headroom.proxyPort"];
@@ -88,29 +100,37 @@ export async function compressTextViaProxy(
   model = "claude-sonnet-4-5",
   fetchImpl: typeof fetch = fetch,
 ): Promise<{ text: string; tokensSaved: number }> {
-  const response = await fetchImpl(`${proxyUrl}/v1/compress`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      messages: [{ role: "user", content: text }],
-      model,
-      fallback: true,
-    }),
-    signal: AbortSignal.timeout(30_000),
-  });
-
-  if (!response.ok) {
+  if (!isLocalProxyUrl(proxyUrl)) {
     return { text, tokensSaved: 0 };
   }
 
-  const data = (await response.json()) as Record<string, unknown>;
-  const tokensSaved = tokensSavedFromResponse(data);
-  const compressed = extractCompressedContent(data);
-  if (!compressed || compressed === text) {
+  try {
+    const response = await fetchImpl(`${proxyUrl}/v1/compress`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: [{ role: "user", content: text }],
+        model,
+        fallback: true,
+      }),
+      signal: AbortSignal.timeout(30_000),
+    });
+
+    if (!response.ok) {
+      return { text, tokensSaved: 0 };
+    }
+
+    const data = (await response.json()) as Record<string, unknown>;
+    const tokensSaved = tokensSavedFromResponse(data);
+    const compressed = extractCompressedContent(data);
+    if (!compressed || compressed === text) {
+      return { text, tokensSaved: 0 };
+    }
+
+    return { text: compressed, tokensSaved };
+  } catch {
     return { text, tokensSaved: 0 };
   }
-
-  return { text: compressed, tokensSaved };
 }
 
 export async function retrieveFromProxy(
@@ -122,6 +142,12 @@ export async function retrieveFromProxy(
   if (!HASH_PATTERN.test(hash)) {
     return JSON.stringify({
       error: "Invalid hash format. Expected 24 hex characters.",
+    });
+  }
+
+  if (!isLocalProxyUrl(proxyUrl)) {
+    return JSON.stringify({
+      error: "Retrieval refused: proxy URL must point to localhost",
     });
   }
 

@@ -45,6 +45,31 @@ def test_install_plugin_writes_project_files(tmp_path: Path) -> None:
     assert settings["headroom.proxyUrl"] == default_proxy_url(8787)
 
 
+def test_install_plugin_writes_workspace_settings_for_global_install(tmp_path: Path) -> None:
+    source_dir = plugin_source_dir()
+    install_plugin(
+        source_dir=source_dir,
+        port=9001,
+        project=tmp_path,
+        global_install=True,
+    )
+
+    settings = json.loads((tmp_path / ".amp" / "settings.json").read_text(encoding="utf-8"))
+    assert settings["headroom.proxyUrl"] == "http://127.0.0.1:9001"
+
+
+def test_remove_plugin_deletes_all_managed_files(tmp_path: Path) -> None:
+    source_dir = plugin_source_dir()
+    install_plugin(source_dir=source_dir, port=8787, project=tmp_path)
+
+    from headroom.providers.amp.wrap import remove_plugin
+
+    remove_plugin(project=tmp_path)
+    plugin_dir = tmp_path / ".amp" / "plugins"
+    assert not (plugin_dir / "headroom.ts").exists()
+    assert not (plugin_dir / "lib.ts").exists()
+
+
 def test_render_setup_lines_mentions_reload_when_needed() -> None:
     lines = render_setup_lines(
         8787,

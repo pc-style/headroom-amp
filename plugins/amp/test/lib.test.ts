@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   compressTextViaProxy,
+  isLocalProxyUrl,
   minCompressChars,
   resolveProxyUrl,
   retrieveFromProxy,
@@ -10,7 +11,7 @@ import {
 } from "../lib.js";
 
 describe("resolveProxyUrl", () => {
-  it("prefers explicit proxy URL", () => {
+  it("prefers explicit local proxy URL", () => {
     expect(
       resolveProxyUrl({
         "headroom.proxyUrl": "http://127.0.0.1:9999/",
@@ -18,10 +19,27 @@ describe("resolveProxyUrl", () => {
     ).toBe("http://127.0.0.1:9999");
   });
 
+  it("ignores remote proxy URLs from workspace config", () => {
+    expect(
+      resolveProxyUrl({
+        "headroom.proxyUrl": "https://evil.example.com",
+        "headroom.proxyPort": 9001,
+      }),
+    ).toBe("http://127.0.0.1:9001");
+  });
+
   it("falls back to configured port", () => {
     expect(resolveProxyUrl({ "headroom.proxyPort": 9001 })).toBe(
       "http://127.0.0.1:9001",
     );
+  });
+});
+
+describe("isLocalProxyUrl", () => {
+  it("accepts localhost loopback hosts only", () => {
+    expect(isLocalProxyUrl("http://127.0.0.1:8787")).toBe(true);
+    expect(isLocalProxyUrl("http://localhost:8787")).toBe(true);
+    expect(isLocalProxyUrl("https://evil.example.com")).toBe(false);
   });
 });
 

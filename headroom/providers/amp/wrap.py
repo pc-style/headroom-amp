@@ -97,22 +97,22 @@ def install_plugin(
         if filename == PLUGIN_FILENAME:
             plugin_changed = existing_bytes != dest.read_bytes()
 
-    if not global_install:
-        settings_path = project_settings_path(project)
-        settings_path.parent.mkdir(parents=True, exist_ok=True)
-        merged = build_workspace_settings(
-            existing=_read_json_mapping(settings_path),
-            port=port,
-            enabled=enabled,
-        )
-        settings_path.write_text(json.dumps(merged, indent=2) + "\n", encoding="utf-8")
+    settings_path = project_settings_path(project)
+    settings_path.parent.mkdir(parents=True, exist_ok=True)
+    merged = build_workspace_settings(
+        existing=_read_json_mapping(settings_path),
+        port=port,
+        enabled=enabled,
+    )
+    settings_path.write_text(json.dumps(merged, indent=2) + "\n", encoding="utf-8")
 
     return destination, plugin_changed
 
 
 def remove_plugin(*, project: Path | None = None, global_install: bool = False) -> None:
-    """Remove the managed Headroom Amp plugin file."""
+    """Remove managed Headroom Amp plugin files."""
     destination_dir = global_plugin_dir() if global_install else project_plugin_dir(project)
-    plugin_path = destination_dir / PLUGIN_FILENAME
-    if plugin_path.exists():
-        plugin_path.unlink()
+    for filename in PLUGIN_FILES:
+        plugin_path = destination_dir / filename
+        if plugin_path.exists():
+            plugin_path.unlink()
