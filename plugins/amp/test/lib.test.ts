@@ -39,6 +39,7 @@ describe("isLocalProxyUrl", () => {
   it("accepts localhost loopback hosts only", () => {
     expect(isLocalProxyUrl("http://127.0.0.1:8787")).toBe(true);
     expect(isLocalProxyUrl("http://localhost:8787")).toBe(true);
+    expect(isLocalProxyUrl("http://[::1]:8787")).toBe(true);
     expect(isLocalProxyUrl("https://evil.example.com")).toBe(false);
   });
 });

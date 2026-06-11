@@ -14,7 +14,8 @@ export type HeadroomWorkspaceConfig = {
 export function isLocalProxyUrl(proxyUrl: string): boolean {
   try {
     const parsed = new URL(proxyUrl);
-    return parsed.hostname === "127.0.0.1" || parsed.hostname === "localhost";
+    const host = parsed.hostname.toLowerCase();
+    return host === "127.0.0.1" || host === "localhost" || host === "::1" || host === "[::1]";
   } catch {
     return false;
   }
