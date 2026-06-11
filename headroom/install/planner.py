@@ -27,6 +27,7 @@ SUPPORTED_TARGETS = [
     ToolTarget.AIDER,
     ToolTarget.CURSOR,
     ToolTarget.OPENCLAW,
+    ToolTarget.AMP,
 ]
 PROVIDER_SCOPE_TARGETS = [
     ToolTarget.CLAUDE,
@@ -51,6 +52,9 @@ def detect_targets() -> list[str]:
             detected.append(target.value)
             continue
         if target == ToolTarget.CURSOR and shutil.which("cursor"):
+            detected.append(target.value)
+            continue
+        if target == ToolTarget.AMP and shutil.which("amp"):
             detected.append(target.value)
     return detected
 

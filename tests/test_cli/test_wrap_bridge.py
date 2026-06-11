@@ -240,3 +240,15 @@ def test_unwrap_openclaw_prepare_only_preserves_unmanaged_config() -> None:
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
     assert payload == {"enabled": False, "config": {"customFlag": True}}
+
+
+def test_wrap_amp_prepare_only_emits_source_dir() -> None:
+    runner = CliRunner()
+
+    result = runner.invoke(main, ["wrap", "amp", "--prepare-only", "--port", "9001"])
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["proxyPort"] == 9001
+    assert payload["globalInstall"] is False
+    assert Path(payload["sourceDir"]).joinpath("headroom.ts").exists()

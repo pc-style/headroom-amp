@@ -6,6 +6,7 @@ Usage:
     headroom wrap codex                     # Start proxy + OpenAI Codex CLI
     headroom wrap aider                     # Start proxy + aider
     headroom wrap cursor                    # Start proxy + print Cursor config instructions
+    headroom wrap amp                       # Install Amp plugin + start proxy
     headroom wrap openclaw                  # Install + configure OpenClaw plugin
     headroom wrap claude --no-context-tool  # Without CLI context-tool setup
     headroom wrap claude --port 9999        # Custom proxy port
@@ -44,6 +45,9 @@ from headroom.copilot_auth import (
     resolve_copilot_api_url,
     resolve_subscription_bearer_token,
 )
+from headroom.providers.amp import install_plugin as _install_amp_plugin_impl
+from headroom.providers.amp import plugin_source_dir as _amp_plugin_source_dir_impl
+from headroom.providers.amp import render_setup_lines as _render_amp_setup_lines
 from headroom.providers.aider import build_launch_env as _build_aider_launch_env
 from headroom.providers.claude import proxy_base_url as _claude_proxy_base_url
 from headroom.providers.codex import build_launch_env as _build_codex_launch_env
@@ -2302,6 +2306,7 @@ def wrap() -> None:
         headroom wrap copilot -- --model claude-sonnet-4-20250514
         headroom wrap aider               # Aider
         headroom wrap cursor              # Cursor (prints config instructions)
+        headroom wrap amp                 # Amp (installs plugin + starts proxy)
         headroom wrap cline               # Cline (VS Code; prints config instructions)
         headroom wrap continue            # Continue (VS Code/JetBrains; injects systemMessage)
         headroom wrap goose               # Goose (Block) CLI
@@ -3285,6 +3290,101 @@ def cursor(
         memory=memory,
         agent_type="cursor",
         print_setup_lines=_print_cursor_setup,
+    )
+
+
+# =============================================================================
+# Amp
+# =============================================================================
+
+
+@wrap.command(context_settings={"ignore_unknown_options": True})
+@click.option("--port", "-p", default=8787, type=int, help="Proxy port (default: 8787)")
+@click.option(
+    "--plugin-path",
+    type=click.Path(path_type=Path, file_okay=False, dir_okay=True),
+    default=None,
+    help="Path to local Amp plugin source directory (advanced/dev override)",
+)
+@click.option(
+    "--global",
+    "global_install",
+    is_flag=True,
+    help="Install plugin to ~/.config/amp/plugins instead of .amp/plugins",
+)
+@click.option("--no-proxy", is_flag=True, help="Skip proxy startup (use existing proxy)")
+@click.option("--learn", is_flag=True, help="Enable live traffic learning")
+@click.option("--memory", is_flag=True, help="Enable persistent cross-session memory")
+@click.option("--verbose", "-v", is_flag=True, help="Verbose output")
+@click.option("--prepare-only", is_flag=True, hidden=True)
+def amp(
+    port: int,
+    plugin_path: Path | None,
+    global_install: bool,
+    no_proxy: bool,
+    learn: bool,
+    memory: bool,
+    verbose: bool,
+    prepare_only: bool,
+) -> None:
+    """Install the Headroom Amp plugin and start the local proxy.
+
+    \b
+    Amp loads plugins from `.amp/plugins/*.ts` in the current project or from
+    `~/.config/amp/plugins` when `--global` is used. This command copies the
+    Headroom plugin, writes workspace proxy settings, starts the proxy, and
+    prints reload instructions.
+
+    \b
+    Example:
+        headroom wrap amp
+        headroom wrap amp --plugin-path ./plugins/amp
+        headroom wrap amp --global
+    """
+    del verbose
+    source_dir = _amp_plugin_source_dir_impl(plugin_path)
+    if prepare_only:
+        click.echo(
+            json.dumps(
+                {
+                    "sourceDir": str(source_dir),
+                    "proxyPort": port,
+                    "globalInstall": global_install,
+                },
+                separators=(",", ":"),
+            )
+        )
+        return
+
+    amp_bin = shutil.which("amp")
+    if amp_bin is None:
+        click.echo("  Note: `amp` was not found in PATH. Install Amp CLI to use the plugin.")
+
+    try:
+        installed_path, plugin_changed = _install_amp_plugin_impl(
+            source_dir=source_dir,
+            port=port,
+            global_install=global_install,
+        )
+    except (FileNotFoundError, NotADirectoryError) as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    def _print_amp_setup() -> None:
+        for line in _render_amp_setup_lines(
+            port,
+            plugin_path=installed_path,
+            reload_required=plugin_changed,
+        ):
+            click.echo(line)
+
+    _run_proxy_only_watcher(
+        agent_label="amp",
+        port=port,
+        no_proxy=no_proxy,
+        learn=learn,
+        memory=memory,
+        agent_type="amp",
+        print_setup_lines=_print_amp_setup,
     )
 
 
