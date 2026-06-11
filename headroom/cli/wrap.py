@@ -45,10 +45,10 @@ from headroom.copilot_auth import (
     resolve_copilot_api_url,
     resolve_subscription_bearer_token,
 )
+from headroom.providers.aider import build_launch_env as _build_aider_launch_env
 from headroom.providers.amp import install_plugin as _install_amp_plugin_impl
 from headroom.providers.amp import plugin_source_dir as _amp_plugin_source_dir_impl
 from headroom.providers.amp import render_setup_lines as _render_amp_setup_lines
-from headroom.providers.aider import build_launch_env as _build_aider_launch_env
 from headroom.providers.claude import proxy_base_url as _claude_proxy_base_url
 from headroom.providers.codex import build_launch_env as _build_codex_launch_env
 from headroom.providers.copilot import (

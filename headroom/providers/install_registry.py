@@ -6,6 +6,7 @@ from collections.abc import Callable
 
 from headroom.install.models import DeploymentManifest, ManagedMutation
 from headroom.providers.aider.install import build_install_env as _build_aider_install_env
+from headroom.providers.amp.install import build_install_env as _build_amp_install_env
 from headroom.providers.claude.install import (
     apply_provider_scope as _apply_claude_provider_scope,
 )
@@ -25,7 +26,6 @@ from headroom.providers.codex.install import (
 from headroom.providers.copilot.install import (
     build_install_env as _build_copilot_install_env,
 )
-from headroom.providers.amp.install import build_install_env as _build_amp_install_env
 from headroom.providers.cursor.install import build_install_env as _build_cursor_install_env
 from headroom.providers.openclaw.install import (
     apply_provider_scope as _apply_openclaw_provider_scope,
