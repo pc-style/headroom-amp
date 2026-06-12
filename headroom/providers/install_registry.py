@@ -6,6 +6,7 @@ from collections.abc import Callable
 
 from headroom.install.models import DeploymentManifest, ManagedMutation
 from headroom.providers.aider.install import build_install_env as _build_aider_install_env
+from headroom.providers.amp.install import build_install_env as _build_amp_install_env
 from headroom.providers.claude.install import (
     apply_provider_scope as _apply_claude_provider_scope,
 )
@@ -43,6 +44,7 @@ _ENV_BUILDERS: dict[str, _InstallEnvBuilder] = {
     "codex": _build_codex_install_env,
     "aider": _build_aider_install_env,
     "cursor": _build_cursor_install_env,
+    "amp": _build_amp_install_env,
 }
 
 _PROVIDER_SCOPE_HANDLERS: dict[str, tuple[_ProviderScopeApplier, _ProviderScopeReverter]] = {

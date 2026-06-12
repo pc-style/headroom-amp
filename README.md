@@ -48,7 +48,7 @@ Headroom compresses everything your AI agent reads — tool outputs, logs, RAG c
 
 - **Library** — `compress(messages)` in Python or TypeScript, inline in any app
 - **Proxy** — `headroom proxy --port 8787`, zero code changes, any language
-- **Agent wrap** — `headroom wrap claude|codex|cursor|aider|copilot` in one command
+- **Agent wrap** — `headroom wrap claude|codex|cursor|aider|copilot|amp` in one command
 - **MCP server** — `headroom_compress`, `headroom_retrieve`, `headroom_stats` for any MCP client
 - **Cross-agent memory** — shared store across Claude, Codex, Gemini, auto-dedup
 - **`headroom learn`** — mines failed sessions, writes corrections to `CLAUDE.md` / `AGENTS.md`
@@ -139,6 +139,7 @@ Reproduce: `python -m headroom.evals suite --tier 1` · [Full benchmarks & metho
 | Aider       | ✅              | starts proxy + launches          |
 | Copilot CLI | ✅              | starts proxy + launches          |
 | OpenClaw    | ✅              | installs as ContextEngine plugin |
+| Amp         | ✅              | installs `.amp/plugins` plugin   |
 
 Any OpenAI-compatible client works via `headroom proxy`. MCP-native: `headroom mcp install`.
 
@@ -214,7 +215,7 @@ Headroom exposes one stable request lifecycle across `compress()`, the SDK, and 
 
 Provider and tool-specific behavior lives under `headroom/providers/` so core orchestration stays focused on lifecycle, sequencing, and policy.
 
-- **CLI/tool slices**: `headroom/providers/claude`, `copilot`, `codex`, `openclaw`
+- **CLI/tool slices**: `headroom/providers/claude`, `copilot`, `codex`, `openclaw`, `amp`
 - **Provider runtime slices**: `headroom/providers/claude`, `gemini`, plus shared backend/runtime dispatch in `headroom/providers/registry.py`
 - **Core files stay orchestration-first**: `wrap.py`, `client.py`, `cli/proxy.py`, and `proxy/server.py` delegate provider-specific env shaping, API target normalization, backend selection, and transport dispatch.
 

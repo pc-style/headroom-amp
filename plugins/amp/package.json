@@ -1,0 +1,16 @@
+{
+  "name": "headroom-amp",
+  "version": "0.24.0",
+  "private": true,
+  "description": "Headroom context compression plugin for Amp",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vitest": "^4.1.5"
+  },
+  "license": "Apache-2.0"
+}

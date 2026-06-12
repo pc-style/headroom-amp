@@ -56,6 +56,7 @@ class ToolTarget(str, Enum):
     AIDER = "aider"
     CURSOR = "cursor"
     OPENCLAW = "openclaw"
+    AMP = "amp"
 
 
 def iso_utc_now() -> str:
